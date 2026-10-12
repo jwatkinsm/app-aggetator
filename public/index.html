@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Social Media Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">S</div>
+          <div>
+            <small>Signal</small>
+            <h2>Social</h2>
+          </div>
+        </div>
+
+        <nav class="nav">
+          <button class="nav-item active">Overview</button>
+          <button class="nav-item">Feeds</button>
+          <button class="nav-item">Campaigns</button>
+          <button class="nav-item">Analytics</button>
+          <button class="nav-item">Alerts</button>
+        </nav>
+
+        <div class="mini-card">
+          <p>Audience pulse</p>
+          <strong>92%</strong>
+          <span>Positive engagement</span>
+        </div>
+      </aside>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Performance dashboard</p>
+            <h1>Social Media Overview</h1>
+          </div>
+          <div class="live-status">
+            <span class="pulse"></span>
+            Live updates
+          </div>
+        </header>
+
+        <section class="stats-grid" id="stats-grid"></section>
+
+        <section class="content-grid">
+          <div class="panel large-panel">
+            <div class="panel-header">
+              <h3>Live feed</h3>
+              <button class="ghost-button">Refresh</button>
+            </div>
+            <div id="feed-list" class="feed-list"></div>
+          </div>
+
+          <div class="panel side-panel">
+            <div class="panel-header">
+              <h3>Instagram API</h3>
+              <span class="mini-badge">Connected</span>
+            </div>
+            <div id="instagram-panel" class="instagram-panel"></div>
+
+            <div class="panel-header section-header">
+              <h3>Trending topics</h3>
+            </div>
+            <ul class="trend-list">
+              <li><span>#AIworkflow</span><strong>28.4k</strong></li>
+              <li><span>#CreatorEconomy</span><strong>19.7k</strong></li>
+              <li><span>#LaunchWeek</span><strong>14.1k</strong></li>
+              <li><span>#Productivity</span><strong>12.8k</strong></li>
+              <li><span>#BrandGrowth</span><strong>9.5k</strong></li>
+            </ul>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
