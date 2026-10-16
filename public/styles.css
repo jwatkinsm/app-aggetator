@@ -362,7 +362,32 @@ button {
 .post-text {
   color: #d3def5;
   line-height: 1.6;
-  margin: 0 0 14px;
+  margin: 0 0 8px;
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+  gap: 8px;
+  margin: 0 0 10px;
+  align-items: start;
+  max-width: 70%;
+  line-height: 0;
+}
+
+.post-image,
+.instagram-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(15, 23, 42, 0.8);
+  margin: 0;
+  padding: 0;
+  object-fit: contain;
+  transform: scale(0.75);
+  transform-origin: center;
 }
 
 .post-metrics {

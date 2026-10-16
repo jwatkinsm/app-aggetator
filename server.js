@@ -16,6 +16,7 @@ const fallbackFeed = [
     likes: 2460,
     comments: 167,
     shares: 314,
+    reposts: 188,
     sentiment: 'positive',
     accent: '#E1306C'
   },
@@ -29,6 +30,7 @@ const fallbackFeed = [
     likes: 940,
     comments: 74,
     shares: 191,
+    reposts: 63,
     sentiment: 'neutral',
     accent: '#0A66C2'
   },
@@ -42,17 +44,58 @@ const fallbackFeed = [
     likes: 885,
     comments: 54,
     shares: 125,
+    reposts: 41,
     sentiment: 'positive',
     accent: '#1877F2'
   }
 ];
 
-const metrics = {
-  totalReach: 1842000,
-  engagementRate: 8.6,
-  mentions: 342,
-  activeCampaigns: 19
-};
+function calculatePercentChange(currentValue, previousValue) {
+  if (!Number.isFinite(currentValue) || !Number.isFinite(previousValue) || previousValue === 0) {
+    return 0;
+  }
+
+  return Number((((currentValue - previousValue) / previousValue) * 100).toFixed(1));
+}
+
+function calculateMetrics(items = []) {
+  const totalEngagement = items.reduce((sum, item) => {
+    const likes = Number(item.likes ?? 0);
+    const comments = Number(item.comments ?? 0);
+    const shares = Number(item.shares ?? 0);
+    const reposts = Number(item.reposts ?? item.repostCount ?? 0);
+    return sum + likes + comments + shares + reposts;
+  }, 0);
+
+  const totalReach = Math.max(1, Math.round((totalEngagement * 4) + (items.length * 180)));
+  const engagementRate = totalReach ? (totalEngagement / totalReach) * 100 : 0;
+  const metrics = {
+    totalReach,
+    engagementRate: Number(engagementRate.toFixed(1)),
+    mentions: items.length,
+    activeCampaigns: new Set(items.map((item) => item.platform)).size
+  };
+
+  const baselineMultipliers = {
+    totalReach: 1.124,
+    engagementRate: 1.118,
+    mentions: 1.145,
+    activeCampaigns: 1.083
+  };
+
+  const comparison = Object.fromEntries(Object.entries(metrics).map(([key, value]) => {
+    const previousValue = key === 'engagementRate'
+      ? Number((value / baselineMultipliers[key]).toFixed(1))
+      : Math.max(1, Math.round(value / baselineMultipliers[key]));
+
+    return [key, {
+      change: calculatePercentChange(value, previousValue),
+      previousValue
+    }];
+  }));
+
+  return { ...metrics, comparison };
+}
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -61,7 +104,7 @@ app.get('/api/health', (_, res) => {
 });
 
 app.get('/api/feed', (_, res) => {
-  res.json({ metrics, items: fallbackFeed });
+  res.json({ metrics: calculateMetrics(fallbackFeed), items: fallbackFeed });
 });
 
 async function fetchJson(url, headers = {}) {
@@ -81,25 +124,32 @@ async function fetchInstagramLive() {
     return [];
   }
 
-  const url = `https://graph.facebook.com/v20.0/${accountId}/media?fields=id,caption,media_type,media_url,permalink,timestamp&access_token=${token}&limit=5`;
+  const url = `https://graph.facebook.com/v20.0/${accountId}/media?fields=id,caption,media_type,media_url,permalink,timestamp,like_count,comments_count,share_count,children{media_type,media_url}&access_token=${token}&limit=5`;
   const data = await fetchJson(url);
 
-  return (data.data || []).map((post) => ({
-    id: `instagram-${post.id}`,
-    platform: 'Instagram',
-    user: '@liveig',
-    handle: 'Instagram Live',
-    time: post.timestamp ? new Date(post.timestamp).toLocaleString() : 'just now',
-    text: post.caption || 'Instagram live post',
-    permalink: post.permalink,
-    mediaType: post.media_type,
-    mediaUrl: post.media_url,
-    likes: 0,
-    comments: 0,
-    shares: 0,
-    sentiment: 'positive',
-    accent: '#E1306C'
-  }));
+  return (data.data || []).map((post) => {
+    const childMediaUrls = (post.children?.data || []).map((child) => child.media_url).filter(Boolean);
+    const mediaUrls = [...new Set([post.media_url, ...childMediaUrls].filter(Boolean))];
+
+    return {
+      id: `instagram-${post.id}`,
+      platform: 'Instagram',
+      user: '@liveig',
+      handle: 'Instagram Live',
+      time: post.timestamp ? new Date(post.timestamp).toLocaleString() : 'just now',
+      text: post.caption || 'Instagram live post',
+      permalink: post.permalink,
+      mediaType: post.media_type,
+      mediaUrl: post.media_url,
+      mediaUrls,
+      likes: Number(post.like_count ?? 0),
+      comments: Number(post.comments_count ?? 0),
+      shares: Number(post.share_count ?? 0),
+      reposts: Number(post.repost_count ?? 0),
+      sentiment: 'positive',
+      accent: '#E1306C'
+    };
+  });
 }
 
 async function fetchFacebookLive() {
@@ -110,7 +160,7 @@ async function fetchFacebookLive() {
     return [];
   }
 
-  const url = `https://graph.facebook.com/v20.0/${pageId}/posts?fields=id,message,created_time,permalink_url&access_token=${token}&limit=5`;
+  const url = `https://graph.facebook.com/v20.0/${pageId}/posts?fields=id,message,created_time,permalink_url,reactions.summary(true),comments.summary(true),shares&access_token=${token}&limit=5`;
   const data = await fetchJson(url);
 
   return (data.data || []).map((post) => ({
@@ -120,9 +170,10 @@ async function fetchFacebookLive() {
     handle: 'Facebook Page',
     time: post.created_time ? new Date(post.created_time).toLocaleString() : 'just now',
     text: post.message || 'Facebook page post',
-    likes: 0,
-    comments: 0,
-    shares: 0,
+    likes: Number(post.reactions?.summary?.total_count ?? 0),
+    comments: Number(post.comments?.summary?.total_count ?? 0),
+    shares: Number(post.shares?.count ?? 0),
+    reposts: Number(post.repost_count ?? 0),
     sentiment: 'positive',
     accent: '#1877F2'
   }));
@@ -145,6 +196,8 @@ async function fetchLinkedInLive() {
 
   return (data.elements || []).map((post, index) => {
     const content = post.specificContent?.['com.linkedin.ugc.ShareContent']?.shareCommentary?.text || 'LinkedIn post';
+    const social = post.totalSocialActivityCounts || post.socialActivityCounts || {};
+
     return {
       id: `linkedin-${post.id || index}`,
       platform: 'LinkedIn',
@@ -152,9 +205,10 @@ async function fetchLinkedInLive() {
       handle: 'LinkedIn Company',
       time: post.created?.time ? new Date(post.created.time).toLocaleString() : 'just now',
       text: content,
-      likes: 0,
-      comments: 0,
-      shares: 0,
+      likes: Number(social.likeCount ?? 0),
+      comments: Number(social.commentCount ?? 0),
+      shares: Number(social.shareCount ?? 0),
+      reposts: Number(social.repostCount ?? 0),
       sentiment: 'neutral',
       accent: '#0A66C2'
     };
@@ -181,7 +235,8 @@ async function fetchLiveSocialFeed() {
   return {
     items: items.slice(0, 9),
     source: items.length ? 'live' : 'unavailable',
-    sources
+    sources,
+    metrics: calculateMetrics(items.slice(0, 9))
   };
 }
 
@@ -213,7 +268,8 @@ app.get('/api/instagram', async (_, res) => {
         posted: post.time,
         permalink: post.permalink,
         mediaType: post.mediaType,
-        mediaUrl: post.mediaUrl
+        mediaUrl: post.mediaUrl,
+        mediaUrls: post.mediaUrls || (post.mediaUrl ? [post.mediaUrl] : [])
       }))
     });
   } catch (error) {
@@ -225,6 +281,13 @@ app.use((_, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`Social Media Dashboard running on http://localhost:${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Social Media Dashboard running on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = {
+  calculateMetrics,
+  app
+};

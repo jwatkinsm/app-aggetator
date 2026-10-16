@@ -27,9 +27,16 @@ function escapeHtml(value) {
   })[character]);
 }
 
+function formatComparison(change) {
+  const prefix = change > 0 ? '+' : change < 0 ? '-' : '';
+  return `${prefix}${Math.abs(change).toFixed(1)}%`;
+}
+
 function renderStats(metrics) {
   statsGrid.innerHTML = statDefinitions.map((stat) => {
     const value = metrics[stat.key];
+    const comparison = metrics.comparison?.[stat.key] ?? { change: 0 };
+    const percentChange = Number(comparison.change ?? 0);
     let display = value;
 
     if (stat.format === 'compact') display = formatCompact(value);
@@ -40,12 +47,60 @@ function renderStats(metrics) {
         <div class="stat-label">${stat.label}</div>
         <div class="stat-value">${display}</div>
         <div class="stat-meta">
-          <span>+12.4%</span>
+          <span>${formatComparison(percentChange)}</span>
           <span>vs last week</span>
         </div>
       </article>
     `;
   }).join('');
+}
+
+function updateAudiencePulse(items) {
+  const pulseValue = document.getElementById('audience-pulse-value');
+  const pulseLabel = document.getElementById('audience-pulse-label');
+  const scoredItems = items.filter((item) =>
+    ['positive', 'neutral', 'negative'].includes(String(item.sentiment || '').toLowerCase())
+  );
+
+  if (!scoredItems.length) {
+    pulseValue.textContent = '—';
+    pulseLabel.textContent = 'No sentiment data';
+    return;
+  }
+
+  const positiveItems = scoredItems.filter((item) =>
+    String(item.sentiment).toLowerCase() === 'positive'
+  ).length;
+  const score = Math.round((positiveItems / scoredItems.length) * 100);
+
+  pulseValue.textContent = `${score}%`;
+  pulseLabel.textContent = 'Positive sentiment';
+}
+
+function getMediaUrls(post) {
+  const candidateSets = [
+    post?.mediaUrls,
+    post?.images,
+    post?.imageUrls,
+    post?.mediaUrl ? [post.mediaUrl] : [],
+    post?.image ? [post.image] : [],
+    post?.children?.data?.map((child) => child?.media_url).filter(Boolean) || []
+  ];
+
+  const urls = candidateSets.flat().filter((value) => typeof value === 'string' && value.trim());
+  return [...new Set(urls)];
+}
+
+function renderMediaGrid(mediaUrls, altText, className = 'post-image') {
+  if (!mediaUrls.length) return '';
+
+  return `
+    <div class="media-grid">
+      ${mediaUrls.slice(0, 4).map((url, index) => `
+        <img class="${className}" src="${escapeHtml(url)}" alt="${escapeHtml(`${altText || 'Post image'} ${index + 1}`)}" />
+      `).join('')}
+    </div>
+  `;
 }
 
 function renderFeed(items, source, sources = {}) {
@@ -58,26 +113,37 @@ function renderFeed(items, source, sources = {}) {
     return;
   }
 
-  feedList.innerHTML = items.map((item) => `
-    <article class="post-card">
-      <div class="post-top">
-        <div class="user-meta">
-          <div class="avatar" style="background:${item.accent};">${escapeHtml(item.user.slice(1, 2).toUpperCase())}</div>
-          <div class="handle">
-            <strong>${escapeHtml(item.handle)}</strong>
-            <span>${escapeHtml(item.user)} · ${escapeHtml(item.time)}</span>
+  feedList.innerHTML = items.map((item) => {
+    const mediaUrls = getMediaUrls(item);
+    const mediaMarkup = renderMediaGrid(mediaUrls, item.text || item.handle, 'post-image');
+    const likes = Number(item.likes ?? 0);
+    const comments = Number(item.comments ?? 0);
+    const shares = Number(item.shares ?? 0);
+    const reposts = Number(item.reposts ?? item.repostCount ?? 0);
+
+    return `
+      <article class="post-card">
+        <div class="post-top">
+          <div class="user-meta">
+            <div class="avatar" style="background:${item.accent};">${escapeHtml(item.user.slice(1, 2).toUpperCase())}</div>
+            <div class="handle">
+              <strong>${escapeHtml(item.handle)}</strong>
+              <span>${escapeHtml(item.user)} · ${escapeHtml(item.time)}</span>
+            </div>
           </div>
+          <span class="platform-badge" style="background:${item.accent};">${escapeHtml(item.platform)}</span>
         </div>
-        <span class="platform-badge" style="background:${item.accent};">${escapeHtml(item.platform)}</span>
-      </div>
-      <p class="post-text">${escapeHtml(item.text)}</p>
-      <div class="post-metrics">
-        <span>❤️ ${item.likes.toLocaleString()}</span>
-        <span>💬 ${item.comments.toLocaleString()}</span>
-        <span>🔁 ${item.shares.toLocaleString()}</span>
-      </div>
-    </article>
-  `).join('');
+        <p class="post-text">${escapeHtml(item.text)}</p>
+        ${mediaMarkup}
+        <div class="post-metrics">
+          <span>❤️ ${likes.toLocaleString()}</span>
+          <span>💬 ${comments.toLocaleString()}</span>
+          <span>🔁 ${shares.toLocaleString()}</span>
+          <span>↻ ${reposts.toLocaleString()}</span>
+        </div>
+      </article>
+    `;
+  }).join('');
 }
 
 function renderInstagram(data) {
@@ -98,12 +164,17 @@ function renderInstagram(data) {
       <strong>${posts.length} recent posts</strong>
     </div>
     <div class="instagram-posts">
-      ${posts.slice(0, 3).map((post) => `
-        <div class="instagram-post">
-          <strong>${escapeHtml(post.posted)}</strong>
-          <p>${escapeHtml(post.caption)}</p>
-        </div>
-      `).join('')}
+      ${posts.slice(0, 3).map((post) => {
+        const mediaUrls = getMediaUrls(post);
+
+        return `
+          <div class="instagram-post">
+            <strong>${escapeHtml(post.posted)}</strong>
+            ${renderMediaGrid(mediaUrls, post.caption || 'Instagram post', 'instagram-image')}
+            <p>${escapeHtml(post.caption)}</p>
+          </div>
+        `;
+      }).join('')}
     </div>
   `;
 }
@@ -117,6 +188,7 @@ async function loadDashboard() {
     const liveResponse = await fetch('/api/social/live');
     const liveData = await liveResponse.json();
     renderFeed(liveData.items, liveData.source, liveData.sources);
+    updateAudiencePulse(liveData.items);
 
     const instagramResponse = await fetch('/api/instagram');
     const instagramData = await instagramResponse.json();
@@ -131,6 +203,7 @@ async function pollLiveUpdates() {
     const response = await fetch('/api/social/live');
     const data = await response.json();
     renderFeed(data.items, data.source, data.sources);
+    updateAudiencePulse(data.items);
   } catch (error) {
     console.error('Failed to fetch live updates:', error);
   }
