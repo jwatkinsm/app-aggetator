@@ -5,6 +5,7 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 8085;
 
+// --- Sample feed data ---
 const fallbackFeed = [
   {
     id: 1,
@@ -50,6 +51,7 @@ const fallbackFeed = [
   }
 ];
 
+// --- Summary metric calculations ---
 function calculatePercentChange(currentValue, previousValue) {
   if (!Number.isFinite(currentValue) || !Number.isFinite(previousValue) || previousValue === 0) {
     return 0;
@@ -67,6 +69,7 @@ function calculateMetrics(items = []) {
     return sum + likes + comments + shares + reposts;
   }, 0);
 
+  // Reach is estimated from engagement here; it is not a platform-reported metric.
   const totalReach = Math.max(1, Math.round((totalEngagement * 4) + (items.length * 180)));
   const engagementRate = totalReach ? (totalEngagement / totalReach) * 100 : 0;
   const metrics = {
@@ -83,6 +86,7 @@ function calculateMetrics(items = []) {
     activeCampaigns: 1.083
   };
 
+  // Comparison values are derived from fixed multipliers, not stored historical measurements.
   const comparison = Object.fromEntries(Object.entries(metrics).map(([key, value]) => {
     const previousValue = key === 'engagementRate'
       ? Number((value / baselineMultipliers[key]).toFixed(1))
@@ -97,6 +101,7 @@ function calculateMetrics(items = []) {
   return { ...metrics, comparison };
 }
 
+// --- Static assets and sample-data endpoints ---
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/api/health', (_, res) => {
@@ -107,6 +112,7 @@ app.get('/api/feed', (_, res) => {
   res.json({ metrics: calculateMetrics(fallbackFeed), items: fallbackFeed });
 });
 
+// --- Shared API request helper ---
 async function fetchJson(url, headers = {}) {
   const response = await fetch(url, { headers });
   if (!response.ok) {
@@ -116,6 +122,7 @@ async function fetchJson(url, headers = {}) {
   return response.json();
 }
 
+// --- Instagram integration ---
 async function fetchInstagramLive() {
   const token = process.env.INSTAGRAM_ACCESS_TOKEN;
   const accountId = process.env.INSTAGRAM_ACCOUNT_ID;
@@ -152,6 +159,7 @@ async function fetchInstagramLive() {
   });
 }
 
+// --- Facebook integration ---
 async function fetchFacebookLive() {
   const token = process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
   const pageId = process.env.FACEBOOK_PAGE_ID;
@@ -187,6 +195,7 @@ async function fetchFacebookLive() {
   });
 }
 
+// --- Facebook attachment image helpers ---
 function collectFacebookAttachmentImages(node) {
   if (!node || typeof node !== 'object') return [];
 
@@ -196,6 +205,7 @@ function collectFacebookAttachmentImages(node) {
     ...(Array.isArray(node.subattachments?.data) ? node.subattachments.data : [])
   ];
 
+  // Albums can nest subattachments, so walk each level to collect every image.
   return [
     ...(typeof imageUrl === 'string' ? [imageUrl] : []),
     ...nestedAttachments.flatMap(collectFacebookAttachmentImages)
@@ -211,6 +221,7 @@ function uniqueImageUrls(urls) {
     let key = url;
     try {
       const parsed = new URL(url);
+      // Facebook may return size variants with different query strings for the same image path.
       key = `${parsed.origin}${parsed.pathname}`;
     } catch {
       key = url;
@@ -222,6 +233,7 @@ function uniqueImageUrls(urls) {
   });
 }
 
+// --- LinkedIn integration ---
 async function fetchLinkedInLive() {
   const token = process.env.LINKEDIN_ACCESS_TOKEN;
   const orgId = process.env.LINKEDIN_ORGANIZATION_ID;
@@ -258,8 +270,10 @@ async function fetchLinkedInLive() {
   });
 }
 
+// --- Live feed aggregation ---
 async function fetchLiveSocialFeed() {
   const platforms = ['Instagram', 'Facebook', 'LinkedIn'];
+  // Keep a failure in one platform from preventing successful sources from appearing.
   const results = await Promise.allSettled([
     fetchInstagramLive(),
     fetchFacebookLive(),
@@ -283,6 +297,7 @@ async function fetchLiveSocialFeed() {
   };
 }
 
+// --- Live social API routes ---
 app.get('/api/social/live', async (_, res) => {
   try {
     res.json(await fetchLiveSocialFeed());
@@ -299,6 +314,7 @@ app.get('/api/feed/live', async (_, res) => {
   }
 });
 
+// --- Instagram API route ---
 app.get('/api/instagram', async (_, res) => {
   try {
     const posts = await fetchInstagramLive();
@@ -320,6 +336,7 @@ app.get('/api/instagram', async (_, res) => {
   }
 });
 
+// --- Fallback route and server startup ---
 app.use((_, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });

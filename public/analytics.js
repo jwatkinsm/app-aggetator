@@ -1,9 +1,11 @@
+// --- Analytics page elements ---
 const analyticsStats = document.getElementById('analytics-stats');
 const platformBreakdown = document.getElementById('platform-breakdown');
 const engagementBreakdown = document.getElementById('engagement-breakdown');
 const sentimentBreakdown = document.getElementById('sentiment-breakdown');
 const topPosts = document.getElementById('top-posts');
 
+// --- Formatting and safe text helpers ---
 function formatCompact(value) {
   return new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(value);
 }
@@ -18,6 +20,7 @@ function escapeHtml(value) {
   })[character]);
 }
 
+// --- Audience sentiment and engagement calculations ---
 function updateAudiencePulse(items) {
   const pulseValue = document.getElementById('audience-pulse-value');
   const pulseLabel = document.getElementById('audience-pulse-label');
@@ -53,6 +56,7 @@ function getEngagementCounts(item) {
   };
 }
 
+// --- Analytics summaries and visualizations ---
 function renderAnalytics(items) {
   // These summaries describe only the current live-feed sample, not a historical reporting period.
   const engagementTotals = { likes: 0, comments: 0, shares: 0, reposts: 0 };
@@ -159,6 +163,7 @@ function renderAnalytics(items) {
     : '<p class="empty-state">No posts to rank yet.</p>';
 }
 
+// --- Live analytics refresh ---
 async function refreshAnalytics() {
   try {
     const response = await fetch('/api/social/live');

@@ -369,11 +369,11 @@ button {
 
 .media-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr));
   gap: 8px;
   margin: 0 0 10px;
   align-items: start;
-  max-width: 70%;
+  max-width: 100%;
   line-height: 0;
 }
 
@@ -388,8 +388,6 @@ button {
   margin: 0;
   padding: 0;
   object-fit: contain;
-  transform: scale(0.75);
-  transform-origin: center;
 }
 
 .post-metrics {

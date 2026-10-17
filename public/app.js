@@ -1,3 +1,4 @@
+// --- Dashboard elements and summary definitions ---
 const statsGrid = document.getElementById('stats-grid');
 const feedList = document.getElementById('feed-list');
 const instagramPanel = document.getElementById('instagram-panel');
@@ -9,6 +10,7 @@ const statDefinitions = [
   { label: 'Active campaigns', key: 'activeCampaigns', format: 'number' }
 ];
 
+// --- Formatting and safe text helpers ---
 function formatCompact(value) {
   return new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(value);
 }
@@ -55,6 +57,7 @@ function renderStats(metrics) {
   }).join('');
 }
 
+// --- Audience sentiment summary ---
 function updateAudiencePulse(items) {
   const pulseValue = document.getElementById('audience-pulse-value');
   const pulseLabel = document.getElementById('audience-pulse-label');
@@ -78,6 +81,7 @@ function updateAudiencePulse(items) {
   pulseLabel.textContent = 'Positive sentiment';
 }
 
+// --- Post media collection and rendering ---
 function collectNestedMediaUrls(node) {
   if (!node || typeof node !== 'object') return [];
 
@@ -105,13 +109,14 @@ function renderMediaGrid(mediaUrls, altText, className = 'post-image') {
 
   return `
     <div class="media-grid">
-      ${mediaUrls.slice(0, 4).map((url, index) => `
+      ${mediaUrls.map((url, index) => `
         <img class="${className}" src="${escapeHtml(url)}" alt="${escapeHtml(`${altText || 'Post image'} ${index + 1}`)}" />
       `).join('')}
     </div>
   `;
 }
 
+// --- Social feed and Instagram rendering ---
 function renderFeed(items, source, sources = {}) {
   if (!items.length) {
     const failedSources = Object.entries(sources)
@@ -188,6 +193,7 @@ function renderInstagram(data) {
   `;
 }
 
+// --- Initial data loading and live refresh ---
 async function loadDashboard() {
   try {
     const response = await fetch('/api/feed');
