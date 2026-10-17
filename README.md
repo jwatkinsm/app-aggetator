@@ -65,7 +65,7 @@ The server tolerates individual live-source failures so available platforms can 
 
 ## Demonstration video
 
-Add a link to a 4–5 minute YouTube demonstration here. Show the app running, walk through its main pages and code, and describe what you learned about JavaScript syntax.
+[https://youtu.be/-cozvob2fHI](https://youtu.be/-cozvob2fHI)
 
 ## Useful references
 
