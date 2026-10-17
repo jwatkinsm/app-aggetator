@@ -92,6 +92,7 @@ button {
 }
 
 .nav-item {
+  display: block;
   text-align: left;
   border: 1px solid transparent;
   border-radius: 12px;
@@ -100,6 +101,7 @@ button {
   padding: 12px 14px;
   cursor: pointer;
   transition: 0.2s ease;
+  text-decoration: none;
 }
 
 .nav-item.active,
@@ -426,6 +428,224 @@ button {
   color: var(--text);
 }
 
+.page-view[hidden],
+.analytics-view[hidden] {
+  display: none;
+}
+
+.analytics-view {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.analytics-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 4px 2px;
+}
+
+.analytics-intro .eyebrow {
+  margin: 0 0 7px;
+}
+
+.analytics-intro p:last-child {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.analytics-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.analytics-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--panel);
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.2);
+}
+
+.analytics-stat span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.analytics-stat strong {
+  font-size: clamp(1.45rem, 2.5vw, 2rem);
+  overflow-wrap: anywhere;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.analytics-grid > .panel {
+  min-width: 0;
+}
+
+.panel-caption {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.analytics-bars,
+.sentiment-breakdown,
+.top-posts {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.bar-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bar-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  font-size: 0.88rem;
+}
+
+.bar-label strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.bar-track {
+  display: block;
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+  min-width: 0;
+  border-radius: inherit;
+  transition: width 0.3s ease;
+}
+
+.platform-fill {
+  background: linear-gradient(90deg, var(--blue), var(--purple));
+}
+
+.engagement-likes {
+  background: var(--pink);
+}
+
+.engagement-comments {
+  background: var(--blue);
+}
+
+.engagement-shares {
+  background: var(--purple);
+}
+
+.engagement-reposts {
+  background: var(--green);
+}
+
+.bar-detail {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.sentiment-name {
+  text-transform: capitalize;
+}
+
+.sentiment-positive {
+  color: var(--green);
+}
+
+.sentiment-neutral {
+  color: #fbbf24;
+}
+
+.sentiment-negative {
+  color: #fb7185;
+}
+
+.sentiment-fill.sentiment-positive {
+  background: var(--green);
+}
+
+.sentiment-fill.sentiment-neutral {
+  background: #fbbf24;
+}
+
+.sentiment-fill.sentiment-negative {
+  background: #fb7185;
+}
+
+.top-post {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.top-post:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.top-post-rank {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 9px;
+  background: rgba(96, 165, 250, 0.12);
+  color: var(--blue);
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+.top-post-copy {
+  min-width: 0;
+}
+
+.top-post-copy strong {
+  font-size: 0.85rem;
+}
+
+.top-post-copy p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.top-post-total {
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 @media (max-width: 980px) {
   .app-shell {
     grid-template-columns: 1fr;
@@ -438,6 +658,10 @@ button {
   .content-grid {
     grid-template-columns: 1fr;
   }
+
+  .analytics-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 560px) {
@@ -448,5 +672,14 @@ button {
   .topbar {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-intro {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

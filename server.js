@@ -160,23 +160,66 @@ async function fetchFacebookLive() {
     return [];
   }
 
-  const url = `https://graph.facebook.com/v20.0/${pageId}/posts?fields=id,message,created_time,permalink_url,reactions.summary(true),comments.summary(true),shares&access_token=${token}&limit=5`;
+  const url = `https://graph.facebook.com/v20.0/${pageId}/posts?fields=id,message,created_time,permalink_url,full_picture,attachments{media,subattachments},reactions.summary(true),comments.summary(true),shares&access_token=${token}&limit=5`;
   const data = await fetchJson(url);
 
-  return (data.data || []).map((post) => ({
-    id: `facebook-${post.id}`,
-    platform: 'Facebook',
-    user: '@livefacebook',
-    handle: 'Facebook Page',
-    time: post.created_time ? new Date(post.created_time).toLocaleString() : 'just now',
-    text: post.message || 'Facebook page post',
-    likes: Number(post.reactions?.summary?.total_count ?? 0),
-    comments: Number(post.comments?.summary?.total_count ?? 0),
-    shares: Number(post.shares?.count ?? 0),
-    reposts: Number(post.repost_count ?? 0),
-    sentiment: 'positive',
-    accent: '#1877F2'
-  }));
+  return (data.data || []).map((post) => {
+    const mediaUrls = uniqueImageUrls([
+      post.full_picture,
+      ...collectFacebookAttachmentImages(post.attachments)
+    ]);
+
+    return {
+      id: `facebook-${post.id}`,
+      platform: 'Facebook',
+      user: '@livefacebook',
+      handle: 'Facebook Page',
+      time: post.created_time ? new Date(post.created_time).toLocaleString() : 'just now',
+      text: post.message || 'Facebook page post',
+      mediaUrls,
+      likes: Number(post.reactions?.summary?.total_count ?? 0),
+      comments: Number(post.comments?.summary?.total_count ?? 0),
+      shares: Number(post.shares?.count ?? 0),
+      reposts: Number(post.repost_count ?? 0),
+      sentiment: 'positive',
+      accent: '#1877F2'
+    };
+  });
+}
+
+function collectFacebookAttachmentImages(node) {
+  if (!node || typeof node !== 'object') return [];
+
+  const imageUrl = node.media?.image?.src;
+  const nestedAttachments = [
+    ...(Array.isArray(node.data) ? node.data : []),
+    ...(Array.isArray(node.subattachments?.data) ? node.subattachments.data : [])
+  ];
+
+  return [
+    ...(typeof imageUrl === 'string' ? [imageUrl] : []),
+    ...nestedAttachments.flatMap(collectFacebookAttachmentImages)
+  ];
+}
+
+function uniqueImageUrls(urls) {
+  const seen = new Set();
+
+  return urls.filter((url) => {
+    if (typeof url !== 'string' || !url.trim()) return false;
+
+    let key = url;
+    try {
+      const parsed = new URL(url);
+      key = `${parsed.origin}${parsed.pathname}`;
+    } catch {
+      key = url;
+    }
+
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 async function fetchLinkedInLive() {
@@ -289,5 +332,7 @@ if (require.main === module) {
 
 module.exports = {
   calculateMetrics,
+  collectFacebookAttachmentImages,
+  uniqueImageUrls,
   app
 };

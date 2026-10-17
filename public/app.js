@@ -58,6 +58,7 @@ function renderStats(metrics) {
 function updateAudiencePulse(items) {
   const pulseValue = document.getElementById('audience-pulse-value');
   const pulseLabel = document.getElementById('audience-pulse-label');
+  // Exclude missing or unknown labels so the pulse reflects only classified posts.
   const scoredItems = items.filter((item) =>
     ['positive', 'neutral', 'negative'].includes(String(item.sentiment || '').toLowerCase())
   );
@@ -77,6 +78,14 @@ function updateAudiencePulse(items) {
   pulseLabel.textContent = 'Positive sentiment';
 }
 
+function collectNestedMediaUrls(node) {
+  if (!node || typeof node !== 'object') return [];
+
+  const urls = typeof node.media_url === 'string' ? [node.media_url] : [];
+  const children = Array.isArray(node.children?.data) ? node.children.data : [];
+  return urls.concat(...children.map(collectNestedMediaUrls));
+}
+
 function getMediaUrls(post) {
   const candidateSets = [
     post?.mediaUrls,
@@ -84,7 +93,7 @@ function getMediaUrls(post) {
     post?.imageUrls,
     post?.mediaUrl ? [post.mediaUrl] : [],
     post?.image ? [post.image] : [],
-    post?.children?.data?.map((child) => child?.media_url).filter(Boolean) || []
+    collectNestedMediaUrls(post)
   ];
 
   const urls = candidateSets.flat().filter((value) => typeof value === 'string' && value.trim());
@@ -187,8 +196,9 @@ async function loadDashboard() {
 
     const liveResponse = await fetch('/api/social/live');
     const liveData = await liveResponse.json();
-    renderFeed(liveData.items, liveData.source, liveData.sources);
-    updateAudiencePulse(liveData.items);
+    const items = Array.isArray(liveData.items) ? liveData.items : [];
+    renderFeed(items, liveData.source, liveData.sources);
+    updateAudiencePulse(items);
 
     const instagramResponse = await fetch('/api/instagram');
     const instagramData = await instagramResponse.json();
@@ -202,8 +212,9 @@ async function pollLiveUpdates() {
   try {
     const response = await fetch('/api/social/live');
     const data = await response.json();
-    renderFeed(data.items, data.source, data.sources);
-    updateAudiencePulse(data.items);
+    const items = Array.isArray(data.items) ? data.items : [];
+    renderFeed(items, data.source, data.sources);
+    updateAudiencePulse(items);
   } catch (error) {
     console.error('Failed to fetch live updates:', error);
   }

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Social Analytics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">S</div>
+          <div>
+            <small>Signal</small>
+            <h2>Social</h2>
+          </div>
+        </div>
+
+        <nav class="nav">
+          <a class="nav-item" href="/">Overview</a>
+          <button class="nav-item">Feeds</button>
+          <button class="nav-item">Campaigns</button>
+          <a class="nav-item active" href="/analytics.html" aria-current="page">Analytics</a>
+          <button class="nav-item">Alerts</button>
+        </nav>
+
+        <div class="mini-card">
+          <p>Audience pulse</p>
+          <strong id="audience-pulse-value" aria-live="polite">—</strong>
+          <span id="audience-pulse-label">Waiting for sentiment data</span>
+        </div>
+      </aside>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Performance dashboard</p>
+            <h1>Social Analytics</h1>
+          </div>
+          <div class="live-status">
+            <span class="pulse"></span>
+            Live updates
+          </div>
+        </header>
+
+        <section class="analytics-view" aria-label="Social analytics">
+          <div class="analytics-intro">
+            <div>
+              <p class="eyebrow">Live feed analysis</p>
+              <p>Engagement and sentiment across the posts currently in your live feed.</p>
+            </div>
+            <span class="mini-badge">Updates live</span>
+          </div>
+
+          <div id="analytics-stats" class="analytics-stats"></div>
+
+          <div class="analytics-grid">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Engagement by platform</h3>
+                  <p class="panel-caption">Interactions across the current feed</p>
+                </div>
+              </div>
+              <div id="platform-breakdown" class="analytics-bars"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Engagement mix</h3>
+                  <p class="panel-caption">How people interact with your posts</p>
+                </div>
+              </div>
+              <div id="engagement-breakdown" class="analytics-bars"></div>
+            </section>
+
+            <section class="panel sentiment-panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Audience sentiment</h3>
+                  <p class="panel-caption">Based on sentiment labels in the feed</p>
+                </div>
+              </div>
+              <div id="sentiment-breakdown" class="sentiment-breakdown"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Top posts</h3>
+                  <p class="panel-caption">Ranked by total interactions</p>
+                </div>
+              </div>
+              <div id="top-posts" class="top-posts"></div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/analytics.js"></script>
+  </body>
+</html>

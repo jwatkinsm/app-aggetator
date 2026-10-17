@@ -21,10 +21,10 @@
         </div>
 
         <nav class="nav">
-          <button class="nav-item active">Overview</button>
+          <a class="nav-item active" href="/" aria-current="page">Overview</a>
           <button class="nav-item">Feeds</button>
           <button class="nav-item">Campaigns</button>
-          <button class="nav-item">Analytics</button>
+          <a class="nav-item" href="/analytics.html">Analytics</a>
           <button class="nav-item">Alerts</button>
         </nav>
 
@@ -47,36 +47,39 @@
           </div>
         </header>
 
-        <section class="stats-grid" id="stats-grid"></section>
+        <div id="overview-view" class="page-view">
+          <section class="stats-grid" id="stats-grid"></section>
 
-        <section class="content-grid">
-          <div class="panel large-panel">
-            <div class="panel-header">
-              <h3>Live feed</h3>
-              <button class="ghost-button">Refresh</button>
+          <section class="content-grid">
+            <div class="panel large-panel">
+              <div class="panel-header">
+                <h3>Live feed</h3>
+                <button class="ghost-button">Refresh</button>
+              </div>
+              <div id="feed-list" class="feed-list"></div>
             </div>
-            <div id="feed-list" class="feed-list"></div>
-          </div>
 
-          <div class="panel side-panel">
-            <div class="panel-header">
-              <h3>Instagram API</h3>
-              <span class="mini-badge">Connected</span>
-            </div>
-            <div id="instagram-panel" class="instagram-panel"></div>
+            <div class="panel side-panel">
+              <div class="panel-header">
+                <h3>Instagram API</h3>
+                <span class="mini-badge">Connected</span>
+              </div>
+              <div id="instagram-panel" class="instagram-panel"></div>
 
-            <div class="panel-header section-header">
-              <h3>Trending topics</h3>
+              <div class="panel-header section-header">
+                <h3>Trending topics</h3>
+              </div>
+              <ul class="trend-list">
+                <li><span>#AIworkflow</span><strong>28.4k</strong></li>
+                <li><span>#CreatorEconomy</span><strong>19.7k</strong></li>
+                <li><span>#LaunchWeek</span><strong>14.1k</strong></li>
+                <li><span>#Productivity</span><strong>12.8k</strong></li>
+                <li><span>#BrandGrowth</span><strong>9.5k</strong></li>
+              </ul>
             </div>
-            <ul class="trend-list">
-              <li><span>#AIworkflow</span><strong>28.4k</strong></li>
-              <li><span>#CreatorEconomy</span><strong>19.7k</strong></li>
-              <li><span>#LaunchWeek</span><strong>14.1k</strong></li>
-              <li><span>#Productivity</span><strong>12.8k</strong></li>
-              <li><span>#BrandGrowth</span><strong>9.5k</strong></li>
-            </ul>
-          </div>
-        </section>
+          </section>
+        </div>
+
       </main>
     </div>
 
